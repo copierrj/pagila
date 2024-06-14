@@ -1,27 +1,25 @@
-version: "3"
-volumes:
-  pgdata:
 services:
-  pagila:
-    image: postgres:13.2
-    container_name: pagila
+  postgres:
+    image: postgres:16
     environment:
-      POSTGRES_PASSWORD: 123456
+      POSTGRES_PASSWORD: postgres
       POSTGRES_USER: postgres
+      POSTGRES_DB: pagila
     volumes:
       - ./pagila-schema.sql:/docker-entrypoint-initdb.d/1-pagila-schema.sql
       - ./pagila-data.sql:/docker-entrypoint-initdb.d/2-pagila-data.sql
       - pgdata:/var/lib/postgresql/data
-    expose:
-      - 5432
-    ports:
-      - 5432:5432
-  pgadmin:
-    container_name: pgadmin4_container
-    image: dpage/pgadmin4
-    restart: always
+
+  postgrest:
+    image: postgrest/postgrest:latest
+    depends_on:
+      - postgres
     environment:
-      PGADMIN_DEFAULT_EMAIL: admin@admin.com
-      PGADMIN_DEFAULT_PASSWORD: root
+      PGRST_DB_URI: postgres://postgres:postgres@postgres:5432/pagila
+      PGRST_DB_SCHEMA: public
+      PGRST_DB_ANON_ROLE: postgres
     ports:
-      - "5050:80"
+      - "3000:3000"
+
+volumes:
+  pgdata:
